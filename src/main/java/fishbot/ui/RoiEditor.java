@@ -124,5 +124,147 @@ public class RoiEditor extends JWindow {
         }
     }
 
+    private void drawHandles(Graphics2D g2d, Rectangle roi) {
+        g2d.setStroke(new BasicStroke(1));
+        int hs = HANDLE_SIZE;
 
+        Rectangle[] handles = getHandleRects(roi);
+        for (Rectangle h : handles) {
+            g2d.setColor(Color.WHITE);
+            g2d.fillRect(h.x, h.y, h.width, h.height);
+            g2d.setColor(SELECTED_COLOR);
+            g2d.drawRect(h.x, h.y, h.width, h.height);
+        }
+    }
+
+    private Rectangle[] getHandleRects(Rectangle roi) {
+        int hs = HANDLE_SIZE;
+        int mx = roi.x + roi.width / 2 - hs / 2;
+        int my = roi.y + roi.height / 2 - hs / 2;
+
+        return new Rectangle[]{
+                // Corners: NW, NE, SW, SE
+                new Rectangle(roi.x - hs / 2, roi.y - hs / 2, hs, hs),
+                new Rectangle(roi.x + roi.width - hs / 2, roi.y - hs / 2, hs, hs),
+                new Rectangle(roi.x - hs / 2, roi.y + roi.height - hs / 2, hs, hs),
+                new Rectangle(roi.x + roi.width - hs / 2, roi.y + roi.height - hs / 2, hs, hs),
+                // Edges: N, S, W, E
+                new Rectangle(mx, roi.y - hs / 2, hs, hs),
+                new Rectangle(mx, roi.y + roi.height - hs / 2, hs, hs),
+                new Rectangle(roi.x - hs / 2, my, hs, hs),
+                new Rectangle(roi.x + roi.width - hs / 2, my, hs, hs),
+        };
+    }
+
+    private DragMode[] HANDLE_MODES = {
+            DragMode.RESIZE_NW, DragMode.RESIZE_NE, DragMode.RESIZE_SW, DragMode.RESIZE_SE,
+            DragMode.RESIZE_N, DragMode.RESIZE_S, DragMode.RESIZE_W, DragMode.RESIZE_E
+    };
+
+    private class RoiMouseHandler extends MouseAdapter {
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            Point p = e.getPoint();
+
+            // Right-click to deselect
+            if (SwingUtilities.isRightMouseButton(e)) {
+                selectedRoiKey = null;
+                dragMode = DragMode.NONE;
+                repaint();
+                for (RoiChangeListener l : listeners) l.onRoiDeselected();
+                return;
+            }
+
+            // Check if clicking on a handle of the selected ROI
+            if (selectedRoiKey != null) {
+                Rectangle selectedRoi = Config.ROIS.get(selectedRoiKey);
+                if (selectedRoi != null) {
+                    Rectangle[] handles = getHandleRects(selectedRoi);
+                    for (int i = 0; i < handles.length; i++) {
+                        if (handles[i].contains(p)) {
+                            dragMode = HANDLE_MODES[i];
+                            dragStart = p;
+                            originalRect = new Rectangle(selectedRoi);
+                            return;
+                        }
+                    }
+
+                    // Check if clicking inside the selected ROI (move)
+                    if (selectedRoi.contains(p)) {
+                        dragMode = DragMode.MOVE;
+                        dragStart = p;
+                        originalRect = new Rectangle(selectedRoi);
+                        return;
+                    }
+                }
+            }
+
+            // Check if clicking on any ROI to select it
+            for (String key : Config.ROIS.keySet()) {
+                Rectangle roi = Config.ROIS.get(key);
+                if (roi != null && roi.contains(p)) {
+                    selectedRoiKey = key;
+                    dragMode = DragMode.MOVE;
+                    dragStart = p;
+                    originalRect = new Rectangle(roi);
+                    repaint();
+                    for (RoiChangeListener l : listeners) l.onRoiSelected(key, roi);
+                    return;
+                }
+            }
+
+            // Clicked on nothing — deselect
+            selectedRoiKey = null;
+            dragMode = DragMode.NONE;
+            repaint();
+            for (RoiChangeListener l : listeners) l.onRoiDeselected();
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (dragMode == DragMode.NONE || selectedRoiKey == null || dragStart == null || originalRect == null) {
+                return;
+            }
+
+            int dx = e.getX() - dragStart.x;
+            int dy = e.getY() - dragStart.y;
+
+            Rectangle newRect = computeNewRect(dx, dy);
+            if (newRect == null) return;
+
+            // Enforce minimum size
+            if (newRect.width < 5) newRect.width = 5;
+            if (newRect.height < 5) newRect.height = 5;
+
+            Config.updateRoi(selectedRoiKey, newRect);
+            repaint();
+            for (RoiChangeListener l : listeners) l.onRoiChanged(selectedRoiKey, newRect);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            dragMode = DragMode.NONE;
+            dragStart = null;
+            originalRect = null;
+        }
+
+        private Rectangle computeNewRect(int dx, int dy) {
+            int ox = originalRect.x, oy = originalRect.y;
+            int ow = originalRect.width, oh = originalRect.height;
+
+            return switch (dragMode) {
+                case MOVE -> new Rectangle(ox + dx, oy + dy, ow, oh);
+                case RESIZE_NW -> new Rectangle(ox + dx, oy + dy, ow - dx, oh - dy);
+                case RESIZE_NE -> new Rectangle(ox, oy + dy, ow + dx, oh - dy);
+                case RESIZE_SW -> new Rectangle(ox + dx, oy, ow - dx, oh + dy);
+                case RESIZE_SE -> new Rectangle(ox, oy, ow + dx, oh + dy);
+                case RESIZE_N -> new Rectangle(ox, oy + dy, ow, oh - dy);
+                case RESIZE_S -> new Rectangle(ox, oy, ow, oh + dy);
+                case RESIZE_W -> new Rectangle(ox + dx, oy, ow - dx, oh);
+                case RESIZE_E -> new Rectangle(ox, oy, ow + dx, oh);
+                default -> null;
+            };
+        }
+    }
 }
