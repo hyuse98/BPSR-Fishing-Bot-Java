@@ -181,5 +181,100 @@ public class RoiEditorPanel extends JFrame implements RoiEditor.RoiChangeListene
         add(buttonsPanel);
     }
 
+    // --- Monitor spinner factory ---
 
+    private JSpinner createMonitorSpinner() {
+        JSpinner spinner = new JSpinner(new SpinnerNumberModel(0, 0, 9999, 1));
+        spinner.addChangeListener(e -> {
+            if (updatingFromCode) return;
+            applyMonitorSpinners();
+        });
+        return spinner;
+    }
+
+    private void applyMonitorSpinners() {
+        Config.updateMonitor(
+                (int) spinMonX.getValue(),
+                (int) spinMonY.getValue(),
+                (int) spinMonW.getValue(),
+                (int) spinMonH.getValue()
+        );
+        roiEditor.updateBounds();
+    }
+
+    // --- ROI spinner factory ---
+
+    private JSpinner createRoiSpinner() {
+        JSpinner spinner = new JSpinner(new SpinnerNumberModel(0, 0, 9999, 1));
+        spinner.addChangeListener(e -> {
+            if (updatingFromCode) return;
+            applyRoiSpinners();
+        });
+        return spinner;
+    }
+
+    private void applyRoiSpinners() {
+        String key = roiEditor.getSelectedRoiKey();
+        if (key == null) return;
+
+        Rectangle newRect = new Rectangle(
+                (int) spinX.getValue(),
+                (int) spinY.getValue(),
+                (int) spinW.getValue(),
+                (int) spinH.getValue()
+        );
+
+        Config.updateRoi(key, newRect);
+        roiEditor.repaint();
+    }
+
+    private void loadRoiSpinners(Rectangle roi) {
+        updatingFromCode = true;
+        spinX.setValue(roi.x);
+        spinY.setValue(roi.y);
+        spinW.setValue(roi.width);
+        spinH.setValue(roi.height);
+        updatingFromCode = false;
+    }
+
+    private void clearRoiSpinners() {
+        updatingFromCode = true;
+        spinX.setValue(0);
+        spinY.setValue(0);
+        spinW.setValue(0);
+        spinH.setValue(0);
+        updatingFromCode = false;
+    }
+
+    private void setRoiSpinnersEnabled(boolean enabled) {
+        spinX.setEnabled(enabled);
+        spinY.setEnabled(enabled);
+        spinW.setEnabled(enabled);
+        spinH.setEnabled(enabled);
+    }
+
+    // --- RoiChangeListener callbacks (from overlay drag events) ---
+
+    @Override
+    public void onRoiSelected(String key, Rectangle roi) {
+        updatingFromCode = true;
+        roiSelector.setSelectedItem(key);
+        updatingFromCode = false;
+        loadRoiSpinners(roi);
+        setRoiSpinnersEnabled(true);
+    }
+
+    @Override
+    public void onRoiChanged(String key, Rectangle roi) {
+        loadRoiSpinners(roi);
+    }
+
+    @Override
+    public void onRoiDeselected() {
+        updatingFromCode = true;
+        roiSelector.setSelectedIndex(0);
+        updatingFromCode = false;
+        clearRoiSpinners();
+        setRoiSpinnersEnabled(false);
+    }
 }
