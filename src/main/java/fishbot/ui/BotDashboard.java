@@ -101,5 +101,109 @@ public class BotDashboard extends JFrame implements BotEventListener {
             logWindow.setVisible(btnToggleLogs.isSelected());
         });
 
+        JToggleButton btnToggleConfig = new JToggleButton("Config");
+        btnToggleConfig.addActionListener(e -> {
+            if (btnToggleConfig.isSelected()) {
+                if (configPanel == null) {
+                    configPanel = new ConfigPanel();
+                    configPanel.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent we) {
+                            btnToggleConfig.setSelected(false);
+                            configPanel = null;
+                        }
+                    });
+                }
+                configPanel.setVisible(true);
+            } else {
+                if (configPanel != null) {
+                    configPanel.setVisible(false);
+                    configPanel.dispose();
+                    configPanel = null;
+                }
+            }
+        });
 
+        JPanel topPanel = new JPanel();
+        topPanel.add(btnStart);
+        topPanel.add(btnStop);
+        topPanel.add(btnToggleROI);
+        topPanel.add(btnToggleDebugger);
+        topPanel.add(btnToggleLogs);
+        topPanel.add(btnToggleConfig);
+
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(stateLabel, BorderLayout.CENTER);
+
+        add(topPanel, BorderLayout.LINE_START);
+        add(centerPanel, BorderLayout.CENTER);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                closeRoiEditor();
+                if (detectionDebugger != null) detectionDebugger.dispose();
+                if (configPanel != null) configPanel.dispose();
+                logWindow.dispose();
+            }
+        });
+
+        onLogMessage("Welcome BP:SR Fishing Bot!");
+        onLogMessage(
+                """
+                        ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣟⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+                        ⣿⣿⣿⣿⣿⠿⢿⢛⢟⢛⡛⡳⠳⢾⣮⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿
+                        ⣿⡿⡋⢩⢠⢃⡑⡡⣑⢅⠕⣌⢋⡒⣒⢎⠮⠝⠙⠏⠷⣳⣷⣿⣿
+                        ⣿⣯⣲⡣⣢⡱⡹⡪⢖⠝⠪⠊⡉⣉⣠⣤⢶⡾⢾⣞⡻⣎⢿⣿⣿
+                        ⣿⣿⣿⣿⣿⣾⣷⣷⣷⣻⡚⣽⣟⡯⠷⣝⣫⣾⣿⣿⣿⣿⣷⣿⣿
+                        ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿"""
+        );
+    }
+
+    private void closeRoiEditor() {
+        if (roiEditor != null) {
+            roiEditor.setVisible(false);
+            roiEditor.dispose();
+            roiEditor = null;
+        }
+        if (roiEditorPanel != null) {
+            roiEditorPanel.setVisible(false);
+            roiEditorPanel.dispose();
+            roiEditorPanel = null;
+        }
+    }
+
+    public void setBot(FishingBot bot) {
+        this.bot = bot;
+    }
+
+    @Override
+    public void onLogMessage(String message) {
+        if (logWindow != null) logWindow.appendLog(message);
+    }
+
+    @Override
+    public void onStateChanged(String stateName) {
+        SwingUtilities.invokeLater(() -> stateLabel.setText("Status: " + stateName));
+    }
+
+    @Override
+    public void onFishCaught(int totalCaught) {
+        if (logWindow != null) logWindow.appendLog(">>> Peixe fisgado! Total: " + totalCaught);
+    }
+
+    @Override
+    public void onDetectionUpdate(String templateName, double score, boolean matched) {
+        if (detectionDebugger != null && detectionDebugger.isVisible()) {
+            detectionDebugger.updateDetection(templateName, score, matched);
+        }
+    }
+
+    @Override
+    public void onImageProcessed(org.bytedeco.opencv.opencv_core.Mat image) {
+        if (detectionDebugger != null && detectionDebugger.isVisible()) {
+            //detectionDebugger.updateImage(image);
+            System.out.println();
+        }
+    }
 }
