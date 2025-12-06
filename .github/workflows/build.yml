@@ -26,8 +26,11 @@ jobs:
       - name: Ensure Gradle has execution permission.
         run: chmod +x ./gradlew
 
-      - name: Execute Build
-        run: ./gradlew buildAll
+      - name: Build Windows
+        run: ./gradlew shadowJar -PtargetOs=windows-x86_64
+
+      - name: Build Linux
+        run: ./gradlew shadowJar -PtargetOs=linux-x86_64
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
