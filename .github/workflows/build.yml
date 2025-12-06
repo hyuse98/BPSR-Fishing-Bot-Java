@@ -4,7 +4,12 @@ on:
     branches:
       - main
       - master
+    tags:
+      - 'v*'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-and-artifact:
@@ -14,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'temurin'
@@ -32,9 +37,17 @@ jobs:
       - name: Build Linux
         run: ./gradlew shadowJar -PtargetOs=linux-x86_64
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: BPSR-Bot-Executables
-          path: build/libs/*-all.jar
-          retention-days: 14
+          generate_release_notes: false
+          files: |
+            build/libs/*-all.jar
+
+#      - name: Upload Artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: BPSR-Bot-Executables
+#          path: build/libs/*-all.jar
+#          retention-days: 14
