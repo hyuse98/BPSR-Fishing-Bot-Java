@@ -20,6 +20,11 @@ The BPSR Fishing Bot is designed to automate the fishing mini-game process. It c
   - **Config Panel:** Fine-tune timeouts, precision, and application settings.
 - **Cross-Platform Support:** Configured to build standalone executables for both Windows and Linux.
 
+## Additional Information
+
+- You can use external templates; simply create a "templates" folder in the same directory as the bot file. 
+- A templates folder is available in the releases, but the filenames must match exactly; otherwise, the default templates will be used.
+
 ## Architecture
 
 The bot is structured into several core modules:
@@ -105,3 +110,5 @@ The bot relies on a configuration file which dictates behavior and detection cri
 - `QUICK_SKIP_MODE`: Fast-forwards certain animations if applicable.
 
 Ensure your templates and ROIs are correctly set up through the UI before running the bot in an active game environment.
+
+Not Accepting Pull requests
