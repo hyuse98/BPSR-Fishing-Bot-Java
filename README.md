@@ -22,8 +22,20 @@ The BPSR Fishing Bot is designed to automate the fishing mini-game process. It c
 
 ## Additional Information
 
-- You can use external templates; simply create a "templates" folder in the same directory as the bot file. 
+- You can use external templates if they changed or have difficult to be detected; simply create a "templates" folder in the same directory as the bot file.
 - A templates folder is available in the releases, but the filenames must match exactly; otherwise, the default templates will be used.
+- Templates should have transparent background
+
+**Note**: Config.json is an auto generated file
+
+**E.g**: how use templates
+```plain
+folder/
+├── BPSR-Fishing-Bot-Java-V2-windows-x86_64-all.jar
+├── Config.json 
+└── templates
+    └── files.png
+```
 
 ## Architecture
 
