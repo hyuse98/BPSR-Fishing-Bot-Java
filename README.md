@@ -46,6 +46,63 @@ The bot is structured into several core modules:
 - `fishbot.ui`: The frontend GUI including the dashboard, ROI editor, and log viewer.
 - `fishbot.config`: Persistent configuration management for ROIs, template definitions, and user preferences.
 
+````plain
+BPSR-Fishing-Bot-Java
+├── .github/
+│   └── workflows/
+│       └── build.yml
+├── gradle/*│   
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── fishbot/
+│       │       ├── config/
+│       │       │   ├── Config.java
+│       │       │   ├── ConfigData.java
+│       │       │   └── ConfigLoader.java
+│       │       ├── core/
+│       │       │   ├── event/
+│       │       │   │   ├── impl/
+│       │       │   │   │   └── BotEventBusImpl.java
+│       │       │   │   ├── BotEventBus.java
+│       │       │   │   └── BotEventListener.java
+│       │       │   ├── game/
+│       │       │   │   ├── Detector.java
+│       │       │   │   └── GameController.java
+│       │       │   ├── state/
+│       │       │   │   ├── impl/
+│       │       │   │   │   ├── CastingBaitState.java
+│       │       │   │   │   ├── CheckingRodState.java
+│       │       │   │   │   ├── FinishingState.java
+│       │       │   │   │   ├── PlayingMinigameState.java
+│       │       │   │   │   ├── StartingState.java
+│       │       │   │   │   └── WaitingForBiteState.java
+│       │       │   │   ├── BaseState.java
+│       │       │   │   ├── StateMachine.java
+│       │       │   │   └── StateType.java
+│       │       │   └── FishingBot.java
+│       │       ├── ui/
+│       │       │   ├── BotDashboard.java
+│       │       │   ├── ConfigPanel.java
+│       │       │   ├── DetectionDebugger.java
+│       │       │   ├── LogWindow.java
+│       │       │   ├── RoiEditor.java
+│       │       │   └── RoiEditorPanel.java
+│       │       ├── utils/
+│       │       │   └── Logger.java
+│       │       └── Main.java
+│       └── resources/
+│           └── templates/
+│               ├── broken_rod.png
+│               ├── ...
+├── .gitignore
+├── README.md
+├── build.gradle.kts
+├── gradlew
+├── gradlew.bat
+└── settings.gradle.kts
+````
+
 ## State Flow
 
 ```mermaid
